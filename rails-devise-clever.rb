@@ -112,7 +112,7 @@ end
 # Assets
 ########################################
 run "rm -rf app/assets/stylesheets"
-run "curl -L https://gitlab.com/guillaumecabanel/rails-templates/rails-stylesheets.zip > stylesheets.zip"
+run "curl -L https://gitlab.com/guillaumecabanel/rails-templates/raw/master/rails-stylesheets.zip > stylesheets.zip"
 run "unzip stylesheets.zip -d app/assets && rm stylesheets.zip && mv app/assets/rails-stylesheets app/assets/stylesheets"
 
 run 'rm app/assets/javascripts/application.js'
