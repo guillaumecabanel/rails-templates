@@ -1,4 +1,4 @@
-run "pgrep spring | xargs kill -9"
+run "pgrep -f spring | xargs kill -9"
 
 # GEMFILE
 ########################################
@@ -189,8 +189,7 @@ environment generators
 after_bundle do
   # Generators: db + simple form + pages controller
   ########################################
-  rake 'db:drop db:create db:migrate'
-  rake 'db:migrate'
+
   generate('simple_form:install', '--bootstrap')
   generate(:controller, 'pages', 'home', '--no-helper', '--no-assets', '--skip-routes')
 
@@ -229,7 +228,7 @@ RUBY
 
   # migrate + devie views
   ########################################
-  rake 'db:migrate'
+  rake 'db:drop db:create db:migrate'
   generate('devise:views')
 
   # Pages Controller
@@ -257,7 +256,6 @@ RUBY
   inside 'config' do
     figaro_yml = <<-EOF
 # Export to clever with this command:
-# spring stop ; rails runner -e production 'puts ENV.keys.grep(/\A_FIGARO/).map { |key| "#{key.gsub("_FIGARO_", "")}=#{ENV[key]}" }.join("\n")' | clever env import
 
 # development:
 
