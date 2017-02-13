@@ -14,6 +14,7 @@ gem 'figaro'
 gem 'jbuilder', '~> 2.0'
 gem 'devise'
 gem 'redis'
+gem 'pundit'
 
 gem 'sass-rails'
 gem 'jquery-rails'
@@ -187,9 +188,8 @@ environment generators
 # AFTER BUNDLE
 ########################################
 after_bundle do
-  # Generators: db + simple form + pages controller
+  # Generators: simple form + pages controller
   ########################################
-
   generate('simple_form:install', '--bootstrap')
   generate(:controller, 'pages', 'home', '--no-helper', '--no-assets', '--skip-routes')
 
@@ -211,22 +211,41 @@ tmp/*
 public/assets
 TXT
 
-  # Devie install + user
+  # Devise install + user
   ########################################
   generate('devise:install')
   generate('devise', 'User')
 
-  # App controller
+  # Pundit + App controller with Pundit config
   ########################################
+  generate('pundit:install')
   run 'rm app/controllers/application_controller.rb'
   file 'app/controllers/application_controller.rb', <<-RUBY
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
   before_action :authenticate_user!
+  include Pundit
+
+  # Pundit: white-list approach.
+  after_action :verify_authorized, except: :index, unless: :skip_pundit?
+  after_action :verify_policy_scoped, only: :index, unless: :skip_pundit?
+
+  # Uncomment when you *really understand* Pundit!
+  # rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
+  # def user_not_authorized
+  #   flash[:alert] = "You are not authorized to perform this action."
+  #   redirect_to(root_path)
+  # end
+
+  private
+
+  def skip_pundit?
+    devise_controller? || params[:controller] =~ /(^(rails_)?admin)|(^pages$)/
+  end
 end
 RUBY
 
-  # migrate + devie views
+  # migrate + devise views
   ########################################
   rake 'db:drop db:create db:migrate'
   generate('devise:views')
