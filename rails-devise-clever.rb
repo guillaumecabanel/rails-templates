@@ -136,6 +136,8 @@ file 'app/views/layouts/application.html.erb', <<-HTML
   <head>
     <title>TODO</title>
     <%= csrf_meta_tags %>
+    <%= render 'shared/metatags' %>
+
     #{Rails.version >= "5" ? "<%= action_cable_meta_tag %>" : nil}
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -187,9 +189,8 @@ environment generators
 # AFTER BUNDLE
 ########################################
 after_bundle do
-  # Generators: db + simple form + pages controller
+  # Generators: simple form + pages controller
   ########################################
-
   generate('simple_form:install', '--bootstrap')
   generate(:controller, 'pages', 'home', '--no-helper', '--no-assets', '--skip-routes')
 
@@ -211,22 +212,24 @@ tmp/*
 public/assets
 TXT
 
-  # Devie install + user
+  # Devise install + user
   ########################################
   generate('devise:install')
   generate('devise', 'User')
 
   # App controller
   ########################################
+
   run 'rm app/controllers/application_controller.rb'
   file 'app/controllers/application_controller.rb', <<-RUBY
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
   before_action :authenticate_user!
+  
 end
 RUBY
 
-  # migrate + devie views
+  # migrate + devise views
   ########################################
   rake 'db:drop db:create db:migrate'
   generate('devise:views')
@@ -242,6 +245,70 @@ class PagesController < ApplicationController
   end
 end
 RUBY
+
+  # Metatags
+  ########################################
+  file 'app/views/shared/_metatags.html.erb', <<-HTML
+<meta name="description" content="<%= meta_description %>">
+
+<!-- Facebook Open Graph data -->
+<meta property="og:title" content="<%= meta_title %>" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="<%= request.original_url %>" />
+<meta property="og:image" content="<%= image_url(meta_image) %>" />
+<meta property="og:description" content="<%= meta_description %>" />
+<meta property="og:site_name" content="<%= meta_title %>" />
+
+<!-- Twitter Card data -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="<%= DEFAULT_META['twitter_account'] %>">
+<meta name="twitter:title" content="<%= meta_title %>">
+<meta name="twitter:description" content="<%= meta_description %>">
+<meta name="twitter:creator" content="<%= DEFAULT_META['twitter_account'] %>">
+<meta name="twitter:image:src" content="<%= image_url(meta_image) %>">
+
+<!-- Google+ Schema.org markup -->
+<meta itemprop="name" content="<%= meta_title %>">
+<meta itemprop="description" content="<%= meta_description %>">
+<meta itemprop="image" content="<%= image_url(meta_image) %>">
+HTML
+
+  file 'app/helpers/meta_tags_helper.rb', <<-RUBY
+module MetaTagsHelper
+  def meta_title
+    content_for?(:meta_title) ? content_for(:meta_title) : DEFAULT_META['meta_title']
+  end
+
+  def meta_description
+    content_for?(:meta_description) ? content_for(:meta_description) : DEFAULT_META['meta_description']
+  end
+
+  def meta_image
+    content_for?(:meta_image) ? content_for(:meta_image) : DEFAULT_META['meta_image']
+  end
+end
+RUBY
+
+  file 'config/meta.yml', <<-YAML
+# https://www.lewagon.com/blog/tuto-setup-metatags-rails
+meta_title: "TODO"
+meta_description: "TODO"
+meta_image: "TODO" # image from app/assets/images/
+twitter_account: "@TODO" # Needed for Twitter Cards
+YAML
+
+  run 'rm config/environment.rb'
+file 'config/environment.rb', <<-RUBY
+# Load the Rails application.
+require_relative 'application'
+
+# Initialize the Rails application.
+Rails.application.initialize!
+
+# Initialize default meta tags.
+DEFAULT_META = YAML.load_file(Rails.root.join('config/meta.yml'))
+RUBY
+
 
   # Environments
   ########################################
