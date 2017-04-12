@@ -123,7 +123,6 @@ file 'app/views/layouts/application.html.erb', <<-HTML
   <head>
     <title>TODO</title>
     <%= csrf_meta_tags %>
-    <%= render 'shared/metatags' %>
 
     #{Rails.version >= "5" ? "<%= action_cable_meta_tag %>" : nil}
     <meta name="viewport" content="width=device-width, initial-scale=1">
